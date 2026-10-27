@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from ._ndwidget import NDWidget
     from ._base import NDGraphic
 
-from ...utils import gui
 from ._async import run_sync
 
 
@@ -365,6 +364,8 @@ class ReferenceIndices:
             run_sync(ndg._set_indices_())
             return
 
+        from rendercanvas.auto import loop
+
         task_name = f"ndw-fetch:{type(ndg).__name__}"
         if ndg.name is not None:
             task_name = f"{task_name}:{ndg.name}"
@@ -375,7 +376,7 @@ class ReferenceIndices:
             rev = self._fetch_rev[ndg]
 
             # add to rendercanvas scheduler
-            gui.loop.add_task(self._fetch_request_latest, ndg, rev, name=task_name)
+            loop.add_task(self._fetch_request_latest, ndg, rev, name=task_name)
         else:
             rev = self._fetch_rev.get(ndg, 0)
             # provide index at schedule time so all data is played back sequentially
@@ -385,7 +386,7 @@ class ReferenceIndices:
             # if one is already running the appended entry will be picked up by it
             if not self._fetch_request_active.get(ndg, False):
                 self._fetch_request_active[ndg] = True
-                gui.loop.add_task(self._fetch_request, ndg, name=task_name)
+                loop.add_task(self._fetch_request, ndg, name=task_name)
 
     async def _fetch_request(self, graphic: "NDGraphic"):
         """
